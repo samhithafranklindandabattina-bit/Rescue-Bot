@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rescue Bot - Play as the Robot!</title>
+    <style>
+        .App {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.logo{
+  width: 50px;   /* increased size */
+  height: 50px;
+  border-radius: 30%;
+  object-fit: fill;
+  margin: 0 12px;
+  vertical-align: middle;
+
+  border: 2px solid rgb(255, 102, 0);
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.8));
+}
+
+.scrolling-header-container {
+  background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+  color: rgb(205, 71, 34);
+  padding: 15px 0;
+  width: 100%;
+  overflow: hidden;
+  border-bottom: 3px solid  #0b0b0b;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1000;
+}
+
+.college-name {
+  color: rgb(255, 102, 0);
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(255, 102, 0, 0.8);
+}
+
+.scrolling-header {
+  display: flex;
+  justify-content: center;   /* center horizontally */
+  align-items: center;
+  white-space: nowrap;
+  font-size: 28px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: none;   /* ❌ remove scrolling */
+}
+
+.scrolling-header:hover {
+  animation-play-state: paused;
+}
+
+.scrolling-header span {
+  margin: 0 15px;
+  font-size: 32px;
+}
+
+.scrolling-header .separator {
+  color: #ff8903;
+  font-size: 36px;
+  margin: 0 20px;
+  opacity: 0.7;
+}
+
+@keyframes scrollDept {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.dept-header {
+  background: linear-gradient(135deg, #1e3c72, #1e3c72 100%);
+  color: rgb(254, 212, 2);
+  padding: 15px;
+  overflow: hidden;
+  border-bottom: 2px solid hsl(0, 0%, 8%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dept-scroll {
+  display: inline-block;
+  white-space: nowrap;
+  animation: scrollDept 12s linear infinite;
+}
+
+.dept-text {
+  margin-right: 50px;
+  font-weight: bold;
+  color: #ffff00;
+  text-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
+}
+
+@keyframes scrollDept {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #ffffff;
+        }
+
+        .game-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0px 4px 15px rgba(0, 198, 255, 0.3);
+        }
+
+        .header p {
+            color: #d1d1d1;
+            font-size: 1.2em;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Upgraded Glassmorphism Game Area */
+        .game-area {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .maze-grid {
+            display: grid;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 5px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.05);
+        }
+
+        .cell {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .cell.wall {
+            background: #1f2833;
+            color: #4a5568;
+            box-shadow: inset 0 0 10px #000;
+        }
+
+        .cell.path {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cell.robot {
+            background: #00c6ff;
+            box-shadow: 0 0 15px #00c6ff;
+            animation: float 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        .cell.victim {
+            background: #ff4b2b;
+            box-shadow: 0 0 15px #ff4b2b;
+            animation: pulse 1s infinite;
+            z-index: 10;
+        }
+
+        .cell.victim.saved {
+            background: #ffd700;
+            box-shadow: 0 0 30px #ffd700, 0 0 60px #ff8c00;
+            animation: celebrate 1s ease-in-out infinite;
+            z-index: 20;
+        }
+
+        .cell.visited {
+            background: rgba(0, 198, 255, 0.3);
+            border: 1px solid rgba(0, 198, 255, 0.5);
+            transform: scale(0.9);
+        }
+
+        .cell.final-path {
+            background: linear-gradient(45deg, #f8b500, #fceabb);
+            box-shadow: 0 0 10px #f8b500;
+            animation: pop 0.3s ease-out forwards;
+        }
+        
+        .cell.player-move {
+            background: #9b59b6;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-15deg); }
+            50% { transform: scale(1.2) rotate(15deg); }
+            75% { transform: scale(1.2) rotate(-15deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Upgraded Side Panel */
+        .side-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            min-width: 320px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .game-stats { margin-bottom: 25px; }
+        .stat-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-label { color: #b0c4de; font-size: 1.1em; }
+        .stat-value { font-size: 1.6em; font-weight: bold; color: #00c6ff; }
+
+        .mode-selector {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2); padding: 8px; border-radius: 12px;
+        }
+
+        .mode-btn {
+            flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer;
+            font-size: 1.1em; font-weight: bold; transition: all 0.3s;
+            background: transparent; color: #a0a0a0;
+        }
+
+        .mode-btn.active {
+            background: #00c6ff; color: #000; box-shadow: 0 4px 15px rgba(0, 198, 255, 0.4);
+        }
+        .mode-btn.ai-mode.active {
+            background: #ff4b2b; color: #fff; box-shadow: 0 4px 15px rgba(255, 75, 43, 0.4);
+        }
+
+        .controls {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0;
+        }
+
+        .control-btn {
+            aspect-ratio: 1; border: none; border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1); color: white;
+            font-size: 1.5em; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .control-btn:hover:not(:disabled) { background: #00c6ff; transform: scale(1.05); }
+        .control-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .action-buttons { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
+        .action-btn {
+            padding: 15px; border: none; border-radius: 10px; font-size: 1.1em;
+            font-weight: bold; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        .action-btn.primary { background: linear-gradient(90deg, #00c6ff, #0072ff); color: #fff; }
+        .action-btn.success { background: linear-gradient(90deg, #11998e, #38ef7d); color: white; }
+        .action-btn.secondary { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .action-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .message-box {
+            background: rgba(0, 0, 0, 0.3); border-left: 4px solid #00c6ff;
+            border-radius: 8px; padding: 15px; margin: 15px 0;
+            min-height: 80px; font-size: 1.1em; line-height: 1.5;
+            transition: all 0.3s;
+        }
+
+        .message-box.success {
+            border-left: 4px solid #38ef7d;
+            background: rgba(56, 239, 125, 0.1);
+        }
+
+        .algo-select {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3); color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px; font-size: 1.1em; cursor: pointer; outline: none;
+        }
+        .algo-select option { background: #1a1a2e; color: white; }
+
+        .legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; }
+        .legend-color { width: 25px; height: 25px; border-radius: 8px; }
+
+        @media (max-width: 768px) {
+            .cell { width: 35px; height: 35px; font-size: 18px; }
+            .game-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div className="App">
+      <div class="scrolling-header">
+    <div class="scroll-content">
+  <img src="RC LOGO.jpeg" class="logo"><span class="college-name"> RAMACHANDRA COLLEGE OF ENGINEERING  </span>
+ 
+</div>
+  </div>
+
+     <div class="dept-header">
+  <div class="dept-scroll">
+    <span class="dept-text">DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE</span>
+    <span class="dept-text">DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE</span>
+    <span class="dept-text">DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE</span>
+  </div>
+</div>
+
+    <div class="game-wrapper">
+        <div class="header">
+            <h1>🤖 RESCUE BOT: DISASTER ZONE</h1>
+            <p>Navigate the debris or let the AI calculate the ultimate rescue path!</p>
+        </div>
+
+        <div class="game-container">
+            <div class="game-area">
+                <div id="maze" class="maze-grid"></div>
+            </div>
+
+            <div class="side-panel">
+                <h2>🎮 GAME CONTROLS</h2>
+                
+                <div class="mode-selector">
+                    <button id="playerModeBtn" class="mode-btn active">👤 PLAYER MODE</button>
+                    <button id="aiModeBtn" class="mode-btn ai-mode">🤖 AI MODE</button>
+                </div>
+
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Moves Made</span>
+                        <span class="stat-value" id="movesCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Score</span>
+                        <span class="stat-value" id="score">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Time</span>
+                        <span class="stat-value" id="time">00:00</span>
+                    </div>
+                </div>
+
+                <div id="playerControls">
+                    <h3 style="color: #b0c4de; margin-bottom: 10px;">⬆️ MANUAL OVERRIDE</h3>
+                    <div class="controls">
+                        <button class="control-btn" id="moveUL" disabled>↖️</button>
+                        <button class="control-btn" id="moveUp" disabled>⬆️</button>
+                        <button class="control-btn" id="moveUR" disabled>↗️</button>
+                        <button class="control-btn" id="moveLeft" disabled>⬅️</button>
+                        <button class="control-btn" style="background: transparent; border:none; cursor: default;" disabled></button>
+                        <button class="control-btn" id="moveRight" disabled>➡️</button>
+                        <button class="control-btn" id="moveDL" disabled>↙️</button>
+                        <button class="control-btn" id="moveDown" disabled>⬇️</button>
+                        <button class="control-btn" id="moveDR" disabled>↘️</button>
+                    </div>
+                </div>
+
+                <div id="aiControls" style="display: none;">
+                    <h3 style="color: #b0c4de; margin-bottom: 10px;">🤖 AI PATHFINDING</h3>
+                    
+                    <select id="algoSelect" class="algo-select">
+                        <option value="bfs">Breadth-First Search (Slow/Thorough)</option>
+                        <option value="astar">A* Search (Smart & Fast)</option>
+                        <option value="jps">Jump Point Search (Extreme Speed)</option>
+                    </select>
+
+                    <div class="action-buttons">
+                        <button id="startSearch" class="action-btn primary">🚀 START SEARCH</button>
+                        <button id="showPath" class="action-btn secondary">🗺️ INSTANT PATH</button>
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <label style="color: #b0c4de;">Animation Speed:</label>
+                        <input type="range" id="speedSlider" min="10" max="800" value="400" style="width: 100%; margin-top: 5px;">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="newGame" class="action-btn success">🔄 NEW RANDOM GAME</button>
+                </div>
+
+                <div class="message-box" id="messageBox">
+                    👋 Welcome! Every new game is completely random. Choose your mode and start!
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background: #00c6ff;"></div><span>Robot</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #ff4b2b;"></div><span>Victim</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #1f2833;"></div><span>Wall</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #f8b500;"></div><span>AI Path</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class RescueBotGame {
+            constructor() {
+                this.rows = 10;
+                this.cols = 15;
+                
+                this.maze = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+                
+                this.moves = 0;
+                this.score = 0;
+                this.timeElapsed = 0;
+                this.timerInterval = null;
+                this.timerStarted = false;
+                this.gameMode = 'player';
+                this.searching = false;
+                this.finalPath = [];
+                this.visited = [];
+                this.parent = {};
+                this.gameWon = false;
+                
+                this.generateRandomMap();
+            }
+
+            generateRandomMap() {
+                this.stopTimer();
+                
+                for (let i = 0; i < this.rows; i++) {
+                    for (let j = 0; j < this.cols; j++) {
+                        this.maze[i][j] = 0;
+                    }
+                }
+                
+                let startRow = Math.floor(Math.random() * this.rows);
+                let startCol = Math.floor(Math.random() * this.cols);
+                this.start = [startRow, startCol];
+                this.robotPos = [...this.start];
+                this.maze[startRow][startCol] = 3; 
+                
+                let goalRow, goalCol;
+                do {
+                    goalRow = Math.floor(Math.random() * this.rows);
+                    goalCol = Math.floor(Math.random() * this.cols);
+                } while (goalRow === startRow && goalCol === startCol);
+                
+                this.goal = [goalRow, goalCol];
+                this.maze[goalRow][goalCol] = 2; 
+                
+                for (let i = 0; i < this.rows; i++) {
+                    for (let j = 0; j < this.cols; j++) {
+                        if (this.maze[i][j] === 0) {
+                            this.maze[i][j] = Math.random() < 0.25 ? 1 : 0;
+                        }
+                    }
+                }
+                
+                this.moves = 0;
+                this.score = 0;
+                this.resetTimer();
+                this.gameWon = false;
+                this.finalPath = [];
+                this.visited = [];
+                this.searching = false;
+                
+                document.getElementById('messageBox').className = 'message-box';
+                this.renderMaze();
+                this.updateUI();
+            }
+
+            getNeighbors(pos) {
+                const [row, col] = pos;
+                const neighbors = [];
+                const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+                
+                for (let [dr, dc] of directions) {
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    if (newRow >= 0 && newRow < this.rows && 
+                        newCol >= 0 && newCol < this.cols && 
+                        this.maze[newRow][newCol] !== 1) {
+                        neighbors.push([newRow, newCol]);
+                    }
+                }
+                return neighbors;
+            }
+
+            moveRobot(direction) {
+                if (this.gameMode !== 'player' || this.searching || this.gameWon) return false;
+                
+                if (!this.timerStarted) {
+                    this.startTimer();
+                    document.getElementById('messageBox').innerHTML = '🏃 Bot in motion! Find the victim!';
+                }
+                
+                let [row, col] = this.robotPos;
+                let newPos;
+                
+                switch(direction) {
+                    case 'up': newPos = [row - 1, col]; break;
+                    case 'down': newPos = [row + 1, col]; break;
+                    case 'left': newPos = [row, col - 1]; break;
+                    case 'right': newPos = [row, col + 1]; break;
+                    case 'ul': newPos = [row - 1, col - 1]; break;
+                    case 'ur': newPos = [row - 1, col + 1]; break;
+                    case 'dl': newPos = [row + 1, col - 1]; break;
+                    case 'dr': newPos = [row + 1, col + 1]; break;
+                    default: return false;
+                }
+                
+                if (newPos[0] >= 0 && newPos[0] < this.rows && 
+                    newPos[1] >= 0 && newPos[1] < this.cols && 
+                    this.maze[newPos[0]][newPos[1]] !== 1) {
+                    
+                    this.robotPos = newPos;
+                    this.moves++;
+                    this.score = Math.max(0, 1000 - this.moves * 10);
+                    
+                    if (newPos[0] === this.goal[0] && newPos[1] === this.goal[1]) {
+                        this.victory();
+                    }
+                    
+                    this.renderMaze();
+                    this.updateUI();
+                    return true;
+                }
+                
+                return false;
+            }
+
+            victory() {
+                this.gameWon = true;
+                this.stopTimer();
+                this.score += 500;
+                
+                const msgBox = document.getElementById('messageBox');
+                msgBox.className = 'message-box success';
+                msgBox.innerHTML = `
+                    🎉 <strong>RESCUE SUCCESSFUL!</strong><br>
+                    📊 Score: ${this.score} | 🏃 Moves: ${this.moves} | ⏱️ Time: ${this.formatTime(this.timeElapsed)}
+                `;
+                this.disablePlayerControls();
+                this.renderMaze(); 
+            }
+
+            heuristic(pos1, pos2) {
+                let dx = Math.abs(pos1[0] - pos2[0]);
+                let dy = Math.abs(pos1[1] - pos2[1]);
+                return Math.max(dx, dy) + 0.414 * Math.min(dx, dy); 
+            }
+
+            jump(r, c, dr, dc) {
+                let nr = r + dr;
+                let nc = c + dc;
+
+                if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.cols || this.maze[nr][nc] === 1) return null;
+                if (nr === this.goal[0] && nc === this.goal[1]) return [nr, nc];
+
+                if (dr !== 0 && dc !== 0) {
+                    if ((this.maze[nr - dr]?.[nc] === 1 && this.maze[nr - dr]?.[nc + dc] !== 1) ||
+                        (this.maze[nr]?.[nc - dc] === 1 && this.maze[nr + dr]?.[nc - dc] !== 1)) {
+                        return [nr, nc];
+                    }
+                    if (this.jump(nr, nc, dr, 0) !== null || this.jump(nr, nc, 0, dc) !== null) {
+                        return [nr, nc];
+                    }
+                } else {
+                    if (dr !== 0) {
+                        if ((this.maze[nr]?.[nc - 1] === 1 && this.maze[nr + dr]?.[nc - 1] !== 1) ||
+                            (this.maze[nr]?.[nc + 1] === 1 && this.maze[nr + dr]?.[nc + 1] !== 1)) {
+                            return [nr, nc];
+                        }
+                    } else {
+                        if ((this.maze[nr - 1]?.[nc] === 1 && this.maze[nr - 1]?.[nc + dc] !== 1) ||
+                            (this.maze[nr + 1]?.[nc] === 1 && this.maze[nr + 1]?.[nc + dc] !== 1)) {
+                            return [nr, nc];
+                        }
+                    }
+                }
+                return this.jump(nr, nc, dr, dc);
+            }
+
+            fillJPSPath() {
+                let fullPath = [];
+                for(let i = 0; i < this.finalPath.length - 1; i++) {
+                    let p1 = this.finalPath[i]; 
+                    let p2 = this.finalPath[i+1];
+                    fullPath.push(p1);
+                    
+                    let r = p1[0]; let c = p1[1];
+                    let dr = Math.sign(p2[0] - p1[0]); 
+                    let dc = Math.sign(p2[1] - p1[1]);
+                    
+                    while(r !== p2[0] || c !== p2[1]) {
+                        r += dr; c += dc;
+                        if (r !== p2[0] || c !== p2[1]) {
+                            fullPath.push([r, c]);
+                        }
+                    }
+                }
+                fullPath.push(this.finalPath[this.finalPath.length - 1]);
+                this.finalPath = fullPath;
+            }
+
+            async runSearch(animate = true) {
+                if (this.searching || this.gameWon) return;
+                
+                document.getElementById('messageBox').className = 'message-box';
+                document.getElementById('messageBox').innerHTML = '🧠 AI is calculating optimal rescue route...';
+                
+                this.resetTimer();
+                this.startTimer();
+                
+                this.searching = true;
+                this.visited = [];
+                this.finalPath = [];
+                this.parent = {};
+                
+                const algo = document.getElementById('algoSelect').value;
+                const speed = document.getElementById('speedSlider').value;
+                let found = false;
+                let finalNode = null;
+
+                if (algo === 'bfs') {
+                    const queue = [[...this.robotPos]];
+                    const visitedSet = new Set([`${this.robotPos[0]},${this.robotPos[1]}`]);
+                    this.parent[`${this.robotPos[0]},${this.robotPos[1]}`] = null;
+
+                    while (queue.length > 0 && this.searching) {
+                        const current = queue.shift();
+                        
+                        if (current[0] !== this.robotPos[0] || current[1] !== this.robotPos[1]) {
+                            this.visited.push(current);
+                        }
+                        this.renderMaze();
+
+                        if (current[0] === this.goal[0] && current[1] === this.goal[1]) {
+                            found = true; finalNode = current; break;
+                        }
+
+                        for (let neighbor of this.getNeighbors(current)) {
+                            const key = `${neighbor[0]},${neighbor[1]}`;
+                            if (!visitedSet.has(key)) {
+                                visitedSet.add(key); queue.push(neighbor); this.parent[key] = current;
+                            }
+                        }
+                        if (animate) await this.sleep(parseInt(speed));
+                    }
+                } 
+                else if (algo === 'astar') {
+                    let openSet = [{ pos: [...this.robotPos], g: 0, h: this.heuristic(this.robotPos, this.goal) }];
+                    const gScore = {}; 
+                    gScore[`${this.robotPos[0]},${this.robotPos[1]}`] = 0;
+                    this.parent[`${this.robotPos[0]},${this.robotPos[1]}`] = null;
+
+                    while (openSet.length > 0 && this.searching) {
+                        openSet.sort((a, b) => (a.g + a.h) - (b.g + b.h));
+                        const currentObj = openSet.shift();
+                        const current = currentObj.pos;
+                        const currentKey = `${current[0]},${current[1]}`;
+                        
+                        if (current[0] !== this.robotPos[0] || current[1] !== this.robotPos[1]) {
+                            this.visited.push(current);
+                        }
+                        this.renderMaze();
+
+                        if (current[0] === this.goal[0] && current[1] === this.goal[1]) {
+                            found = true; finalNode = current; break;
+                        }
+
+                        for (let neighbor of this.getNeighbors(current)) {
+                            let moveCost = (neighbor[0] !== current[0] && neighbor[1] !== current[1]) ? 1.414 : 1;
+                            const tentative_gScore = gScore[currentKey] + moveCost;
+                            const key = `${neighbor[0]},${neighbor[1]}`;
+                            
+                            if (tentative_gScore < (gScore[key] === undefined ? Infinity : gScore[key])) {
+                                this.parent[key] = current;
+                                gScore[key] = tentative_gScore;
+                                if (!openSet.some(n => n.pos[0] === neighbor[0] && n.pos[1] === neighbor[1])) {
+                                    openSet.push({ pos: neighbor, g: tentative_gScore, h: this.heuristic(neighbor, this.goal) });
+                                }
+                            }
+                        }
+                        if (animate) await this.sleep(parseInt(speed));
+                    }
+                } 
+                else if (algo === 'jps') {
+                    let openSet = [{ pos: [...this.robotPos], g: 0, h: this.heuristic(this.robotPos, this.goal) }];
+                    const gScore = {}; 
+                    gScore[`${this.robotPos[0]},${this.robotPos[1]}`] = 0;
+                    this.parent[`${this.robotPos[0]},${this.robotPos[1]}`] = null;
+
+                    while (openSet.length > 0 && this.searching) {
+                        openSet.sort((a, b) => (a.g + a.h) - (b.g + b.h));
+                        const currentObj = openSet.shift();
+                        const current = currentObj.pos;
+                        const currentKey = `${current[0]},${current[1]}`;
+                        
+                        if (current[0] !== this.robotPos[0] || current[1] !== this.robotPos[1]) {
+                            this.visited.push(current);
+                        }
+                        this.renderMaze();
+
+                        if (current[0] === this.goal[0] && current[1] === this.goal[1]) {
+                            found = true; finalNode = current; break;
+                        }
+
+                        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+                        for (let d of dirs) {
+                            let jumpNode = this.jump(current[0], current[1], d[0], d[1]);
+                            if (jumpNode) {
+                                let dist = this.heuristic(current, jumpNode);
+                                const tentative_gScore = gScore[currentKey] + dist;
+                                const key = `${jumpNode[0]},${jumpNode[1]}`;
+                                
+                                if (tentative_gScore < (gScore[key] === undefined ? Infinity : gScore[key])) {
+                                    this.parent[key] = current;
+                                    gScore[key] = tentative_gScore;
+                                    if (!openSet.some(n => n.pos[0] === jumpNode[0] && n.pos[1] === jumpNode[1])) {
+                                        openSet.push({ pos: jumpNode, g: tentative_gScore, h: this.heuristic(jumpNode, this.goal) });
+                                    }
+                                }
+                            }
+                        }
+                        if (animate) await this.sleep(parseInt(speed));
+                    }
+                }
+
+                if (found) {
+                    let node = finalNode;
+                    while (node) {
+                        this.finalPath.unshift(node);
+                        node = this.parent[`${node[0]},${node[1]}`];
+                    }
+                    
+                    if (algo === 'jps') this.fillJPSPath();
+                    
+                    this.stopTimer();
+                    this.gameWon = true;
+                    this.renderMaze(); 
+                    
+                    const msgBox = document.getElementById('messageBox');
+                    msgBox.className = 'message-box success';
+                    msgBox.innerHTML = `
+                        🎉 <strong>AI RESCUE SUCCESSFUL!</strong><br>
+                        Algorithm: ${algo.toUpperCase()} | Steps: ${this.finalPath.length - 1} | ⏱️ Time: ${this.formatTime(this.timeElapsed)}
+                    `;
+                } else {
+                    this.stopTimer();
+                    document.getElementById('messageBox').innerHTML = '❌ Mission Failed. No path found to victim!';
+                }
+                this.searching = false;
+            }
+
+            switchMode(mode) {
+                this.gameMode = mode;
+                this.finalPath = [];
+                this.visited = [];
+                this.renderMaze();
+                
+                const playerControls = document.getElementById('playerControls');
+                const aiControls = document.getElementById('aiControls');
+                const playerBtn = document.getElementById('playerModeBtn');
+                const aiBtn = document.getElementById('aiModeBtn');
+                
+                if (mode === 'player') {
+                    playerControls.style.display = 'block';
+                    aiControls.style.display = 'none';
+                    playerBtn.classList.add('active');
+                    aiBtn.classList.remove('active');
+                    this.enablePlayerControls();
+                    document.getElementById('messageBox').className = 'message-box';
+                    document.getElementById('messageBox').innerHTML = '👤 Player Mode Activated. Navigate safely!';
+                } else {
+                    playerControls.style.display = 'none';
+                    aiControls.style.display = 'block';
+                    playerBtn.classList.remove('active');
+                    aiBtn.classList.add('active');
+                    this.disablePlayerControls();
+                    document.getElementById('messageBox').className = 'message-box';
+                    document.getElementById('messageBox').innerHTML = '🤖 AI Mode Activated. Awaiting parameters...';
+                }
+            }
+
+            enablePlayerControls() {
+                ['moveUL', 'moveUp', 'moveUR', 'moveLeft', 'moveRight', 'moveDL', 'moveDown', 'moveDR'].forEach(id => {
+                    document.getElementById(id).disabled = false;
+                });
+            }
+
+            disablePlayerControls() {
+                ['moveUL', 'moveUp', 'moveUR', 'moveLeft', 'moveRight', 'moveDL', 'moveDown', 'moveDR'].forEach(id => {
+                    document.getElementById(id).disabled = true;
+                });
+            }
+
+            renderMaze() {
+                const mazeDiv = document.getElementById('maze');
+                mazeDiv.style.gridTemplateColumns = `repeat(${this.cols}, 1fr)`;
+                
+                let html = '';
+                for (let i = 0; i < this.rows; i++) {
+                    for (let j = 0; j < this.cols; j++) {
+                        let cellClass = 'cell';
+                        let content = '';
+                        
+                        if (i === this.robotPos[0] && j === this.robotPos[1]) {
+                            cellClass += ' robot';
+                            content = '🤖';
+                        }
+                        else if (i === this.goal[0] && j === this.goal[1]) {
+                            cellClass += ' victim';
+                            if (this.gameWon) cellClass += ' saved'; 
+                            content = '👤';
+                        }
+                        else if (this.maze[i][j] === 1) {
+                            cellClass += ' wall';
+                            content = '🧱';
+                        }
+                        else {
+                            cellClass += ' path';
+                            if (this.gameMode === 'ai') {
+                                if (this.finalPath.some(pos => pos[0] === i && pos[1] === j)) {
+                                    cellClass += ' final-path';
+                                    content = ''; 
+                                }
+                                else if (this.visited.some(pos => pos[0] === i && pos[1] === j)) {
+                                    cellClass += ' visited';
+                                }
+                            }
+                        }
+                        
+                        html += `<div class="${cellClass}" data-row="${i}" data-col="${j}">${content}</div>`;
+                    }
+                }
+                
+                mazeDiv.innerHTML = html;
+            }
+
+            updateUI() {
+                document.getElementById('movesCount').textContent = this.moves;
+                document.getElementById('score').textContent = this.score;
+            }
+
+            startTimer() {
+                this.stopTimer(); 
+                this.timerStarted = true;
+                this.timerInterval = setInterval(() => {
+                    this.timeElapsed++;
+                    document.getElementById('time').textContent = this.formatTime(this.timeElapsed);
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null; 
+                    this.timerStarted = false;
+                }
+            }
+
+            resetTimer() {
+                this.stopTimer(); 
+                this.timeElapsed = 0;
+                document.getElementById('time').textContent = this.formatTime(0);
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        const game = new RescueBotGame();
+
+        document.getElementById('playerModeBtn').addEventListener('click', () => game.switchMode('player'));
+        document.getElementById('aiModeBtn').addEventListener('click', () => game.switchMode('ai'));
+
+        document.getElementById('moveUL').addEventListener('click', () => game.moveRobot('ul'));
+        document.getElementById('moveUp').addEventListener('click', () => game.moveRobot('up'));
+        document.getElementById('moveUR').addEventListener('click', () => game.moveRobot('ur'));
+        document.getElementById('moveLeft').addEventListener('click', () => game.moveRobot('left'));
+        document.getElementById('moveRight').addEventListener('click', () => game.moveRobot('right'));
+        document.getElementById('moveDL').addEventListener('click', () => game.moveRobot('dl'));
+        document.getElementById('moveDown').addEventListener('click', () => game.moveRobot('down'));
+        document.getElementById('moveDR').addEventListener('click', () => game.moveRobot('dr'));
+
+        document.addEventListener('keydown', (e) => {
+            if (game.gameMode !== 'player' || game.gameWon) return;
+            switch(e.key) {
+                case 'ArrowUp': e.preventDefault(); game.moveRobot('up'); break;
+                case 'ArrowDown': e.preventDefault(); game.moveRobot('down'); break;
+                case 'ArrowLeft': e.preventDefault(); game.moveRobot('left'); break;
+                case 'ArrowRight': e.preventDefault(); game.moveRobot('right'); break;
+            }
+        });
+
+        document.getElementById('startSearch').addEventListener('click', async () => await game.runSearch(true));
+        document.getElementById('showPath').addEventListener('click', async () => await game.runSearch(false));
+
+        document.getElementById('newGame').addEventListener('click', () => game.generateRandomMap());
+
+        // FIXED: Click to add walls works in ANY mode!
+        document.getElementById('maze').addEventListener('click', (e) => {
+            if (game.searching) return; // Only block clicks if actively running a search
+            
+            const cell = e.target;
+            if(!cell.dataset.row) return; 
+            
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            
+            // Protect robot and victim
+            if ((row === game.start[0] && col === game.start[1]) || 
+                (row === game.goal[0] && col === game.goal[1])) {
+                return;
+            }
+            
+            // Toggle the wall
+            game.maze[row][col] = game.maze[row][col] === 1 ? 0 : 1;
+            
+            // Clear previous paths if building a new custom layout
+            game.finalPath = [];
+            game.visited = [];
+            game.gameWon = false;
+            
+            game.renderMaze();
+        });
+    </script>
+</body>
+</html>
